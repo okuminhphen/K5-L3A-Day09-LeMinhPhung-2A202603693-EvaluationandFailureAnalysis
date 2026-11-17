@@ -57,3 +57,13 @@ def test_check_rejects_missing_tags(tmp_path, evalset_cli):
     result = evalset_cli("--check")
     assert result.returncode == 1, result.stdout + result.stderr
     assert "failure_modes empty" in result.stdout
+
+
+def test_eval_set_hash_is_independent_of_line_endings(tmp_path, evalset_cli):
+    evalset_cli("--build")
+    items = tmp_path / "data/eval/eval_set_v1.jsonl"
+    lf = items.read_bytes()
+    assert b"\r\n" not in lf
+    expected = evalset_cli("--check").stdout
+    items.write_bytes(lf.replace(b"\n", b"\r\n"))
+    assert evalset_cli("--check").stdout == expected
